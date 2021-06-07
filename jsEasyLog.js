@@ -1,5 +1,6 @@
 /*
   Author : Parasa Kiran
+  https://github.com/kiranparasa/JsEasyLog
   
   */
 
