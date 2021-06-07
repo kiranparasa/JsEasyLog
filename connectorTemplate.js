@@ -1,4 +1,7 @@
-/* Use this template to extend output capabilities
+/* 
+    Author : Parasa Kiran
+https://github.com/kiranparasa/JsEasyLog
+Use this template to extend output capabilities
 */
 class connector_template
 {
