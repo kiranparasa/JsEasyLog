@@ -4,31 +4,45 @@
   
   */
 
+LOG_LEVELS = {'Debug':3,'Info':2,'Error':1}
 class jsEasyLog
 {
-  init(name,stack_trc=false)
+
+  nfn()
+  {/* This is null file */}
+
+  init(name,log_level='Debug',stack_trc=false)
   {
     this.appName = name
     this.output = {}
     this.output['Error'] = this.stdout;
     this.output['Debug'] = this.stdout;
     this.output['Info'] =  this.stdout;
-    this.stack_trc = stack_trc;
 
+    this.pipe['Error'] = this.nfn;
+    this.pipe['Debug'] = this.nfn;
+    this.pipe['Info'] =  this.nfn;
+
+    this.stack_trc = stack_trc;
+    this.log_level = LOG_LEVELS[log_level];
+    this.log_st = {"msg":"","json":""}
     this.log = {"timestamp":"",
                   "app":name, 
+                  "server":"",
+                  "processID":"",
                   "line":0,
                   "filename":"",
                   "logLevel":"",
                   "message":"",
+                  "stackTrace":""
                 }
     /*
-    Request log settings from the central repository based on the app name
+    Request NMS for logging rules for this app.
     nms_info = nms.log_pref(this.appName);
     */
   }
 
-  /* Override the output stream function to a custom function */
+  /* Override default stdout output */
   override(type,fn)
   {
     switch(type)
@@ -45,11 +59,27 @@ class jsEasyLog
     this.output[type] = fn;
   }
 
+  /* Pipe the output to external connectors */
+  pipe(type,fn)
+  {
+    switch(type)
+    {
+      case 'Debug':
+        case 'Error':
+          case 'Info':
+            break;
+      default:
+        console.log("Invalid log level " + type)
+        return;
+    }
+
+    this.pipe[type] = fn;
+  }
+
   stdout(st)
   {
     console.log(st)
   }
-
 
   currentTime()
   {
@@ -60,11 +90,18 @@ class jsEasyLog
 
   debug(...args)
   {
+    if(this.log_level < LOG_LEVELS['Debug']){
+      return;
+    }
+
     var st=this.trace("");
     this.log["timestamp"] = this.currentTime();
     this.log["logLevel"] = "Debug";
-    this.log['message'] = args.join();
-    this.pipeIt("Debug", this.log["timestamp"] + "::DEB::" + this.appName + "::"+ st +"::"+this.log['message'])
+    this.log["message"] = args.join();
+
+    this.log_st["json"] = JSON.stringify(this.log);
+    this.log_st["msg"]= this.currentTime() + "::Debug::" + this.appName + "::"+ st +"::"+this.log['message'];
+    this.pipeIt("Debug",this.log_st) 
   }
  
   error(...args)
@@ -73,22 +110,25 @@ class jsEasyLog
     this.log["timestamp"] = this.currentTime();
     this.log["logLevel"] = "Error";
     this.log['message'] = args.join();
-    this.pipeIt("Error", this.currentTime() + "::ERR::" + this.appName + "::"+ st +"::"+this.log['message'])    
+    this.log_st['json'] =  JSON.stringify(this.log);
+    this.log_st['msg']= this.currentTime() + "::Error::" + this.appName + "::"+ st +"::"+this.log['message'];
+    this.pipeIt("Error",this.log_st)
   }
  
   info(...args)
   {
+    if(this.log_level < LOG_LEVELS['Info']){
+      return;
+    }
     var st=this.trace("");
     this.log["timestamp"] = this.currentTime();
     this.log["logLevel"] = "Info";
     this.log['message'] = args.join();
-    this.pipeIt("Info",this.currentTime() + "::INF::" + this.appName + "::"+ st +"::"+this.log['message'])
+    this.log_st["json"] = JSON.stringify(this.log);
+    this.log_st['msg']= this.currentTime() + "::Info1::" + this.appName + "::"+ st +"::"+this.log['message'];
+    this.pipeIt("Info",this.log_st)
   }
 
-  /*
-  Gets the filename and linenumber from the backtrace
-  */
-  
   trace(s) {
       const err = new Error();
 
@@ -111,7 +151,8 @@ class jsEasyLog
 
   pipeIt(lvl,s)
   {
-    this.output[lvl](s);
+    this.output[lvl](s['msg']);
+    this.pipe[lvl](s['json']);
   }
 }
 
