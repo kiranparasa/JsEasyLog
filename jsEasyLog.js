@@ -3,7 +3,7 @@
   https://github.com/kiranparasa/JsEasyLog
   
   */
-
+const process = require('process');
 LOG_LEVELS = {'Debug':3,'Info':2,'Error':1}
 class jsEasyLog
 {
@@ -29,7 +29,7 @@ class jsEasyLog
     this.log = {"timestamp":"",
                   "app":name, 
                   "server":"",
-                  "processID":"",
+                  "processID":process.pid,
                   "line":0,
                   "filename":"",
                   "logLevel":"",
@@ -84,7 +84,7 @@ class jsEasyLog
   currentTime()
   {
     var d = new Date();
-    var n = d.toUTCString();
+    var n = d.toISOString();
     return n
   }
 
