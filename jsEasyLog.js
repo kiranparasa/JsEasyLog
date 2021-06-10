@@ -2,7 +2,8 @@
   Author : Parasa Kiran
   https://github.com/kiranparasa/JsEasyLog
   
-  */
+*/
+
 const process = require('process');
 LOG_LEVELS = {'Debug':3,'Info':2,'Error':1}
 class jsEasyLog
@@ -23,11 +24,12 @@ class jsEasyLog
     this.pipe['Debug'] = this.nfn;
     this.pipe['Info'] =  this.nfn;
 
+    this.fileinfo_lvl =3
     this.stack_trc = stack_trc;
     this.log_level = LOG_LEVELS[log_level];
     this.log_st = {"msg":"","json":""}
     this.log = {"timestamp":"",
-                  "app":name, 
+                  "app":this.appName, 
                   "server":"",
                   "processID":process.pid,
                   "line":0,
@@ -40,6 +42,11 @@ class jsEasyLog
     Request NMS for logging rules for this app.
     nms_info = nms.log_pref(this.appName);
     */
+  }
+
+  lvl(lvl)
+  {
+    this.fileinfo_lvl = lvl;
   }
 
   /* Override default stdout output */
@@ -98,7 +105,7 @@ class jsEasyLog
     this.log["timestamp"] = this.currentTime();
     this.log["logLevel"] = "Debug";
     this.log["message"] = args.join();
-
+  
     this.log_st["json"] = JSON.stringify(this.log);
     this.log_st["msg"]= this.currentTime() + "::Debug::" + this.appName + "::"+ st +"::"+this.log['message'];
     this.pipeIt("Debug",this.log_st) 
@@ -120,6 +127,7 @@ class jsEasyLog
     if(this.log_level < LOG_LEVELS['Info']){
       return;
     }
+  
     var st=this.trace("");
     this.log["timestamp"] = this.currentTime();
     this.log["logLevel"] = "Info";
@@ -129,12 +137,13 @@ class jsEasyLog
     this.pipeIt("Info",this.log_st)
   }
 
+
   trace(s) {
       const err = new Error();
 
       var er = err.stack;
       var vl=er.split("\n");
-      var line  = vl[vl.length>3?3:0];
+      var line  = vl[vl.length>this.fileinfo_lvl?this.fileinfo_lvl:0];
       var words = line.split("\\");
       var skimmed_word = words[words.length-1].replace(")","");
       
