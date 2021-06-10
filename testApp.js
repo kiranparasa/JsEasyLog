@@ -1,5 +1,6 @@
 var {log} = require('./jsEasyLog');
-log.init("TestApp")
+log.init("TestApp",'Debug')
+log.lvl(3)
 
 log.debug("Print debug")
 log.error("Print Error")
